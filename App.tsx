@@ -9,10 +9,10 @@ import PolaroidCard from './components/PolaroidCard';
 import { createAlbumPage } from './lib/albumUtils';
 import Footer from './components/Footer';
 
-const ERAS = ['Ancient Egypt', 'Roman Empire', 'Viking Age',
+const ERAS = [ 'Roman Empire', 'Viking Age',
  'Medieval Period', 'Renaissance', 'Victorian Era', 'The Roaring 20s', 'Swinging 60s', 
  'Psychedelic 70s', 'Neon 80s', 'The Future', 'Stone Age',
- '1800s', '1900s', '1920s', '1950s', '1970s', '1980s', '1990s', '2000s', 
+ '1800s', '1900s', '1920s', '1950s', '1970s', '1980s', '1990s', '2000s'
  ];
 
 // Pre-defined positions for a scattered look on desktop
@@ -29,6 +29,14 @@ const POSITIONS = [
     { top: '15%', left: '18%', rotate: -2 },
     { top: '45%', left: '30%', rotate: 6 },
     { top: '20%', left: '55%', rotate: -15 },
+    { top: '75%', left: '20%', rotate: -8 },
+    { top: '70%', left: '55%', rotate: 4 },
+    { top: '80%', left: '80%', rotate: -18 },
+    { top: '10%', left: '85%', rotate: 20 },
+    { top: '48%', left: '80%', rotate: -7 },
+    { top: '65%', left: '85%', rotate: 18 },
+    { top: '85%', left: '5%', rotate: -10 },
+    { top: '88%', left: '45%', rotate: 12 },
 ];
 
 const GHOST_POLAROIDS_CONFIG = [
@@ -189,27 +197,37 @@ function App() {
     const handleDownloadAlbum = async () => {
         setIsDownloading(true);
         try {
-            const imageData = Object.entries(generatedImages)
-                .filter(([, image]) => image.status === 'done' && image.url)
-                .reduce((acc, [era, image]) => {
-                    acc[era] = image!.url!;
-                    return acc;
-                }, {} as Record<string, string>);
-
-            if (Object.keys(imageData).length < ERAS.length) {
+            const successfulImages = Object.entries(generatedImages).filter(
+                ([, image]) => image.status === 'done' && image.url
+            );
+    
+            if (successfulImages.length < ERAS.length) {
                 alert("Please wait for all images to finish generating before downloading the album.");
+                setIsDownloading(false);
                 return;
             }
-
+    
+            const imageData = successfulImages.reduce((acc, [era, image]) => {
+                acc[era] = image.url!;
+                return acc;
+            }, {} as Record<string, string>);
+    
+            // 1. Create and download the album cover
             const albumDataUrl = await createAlbumPage(imageData);
-
-            const link = document.createElement('a');
-            link.href = albumDataUrl;
-            link.download = 'past-forward-album.jpg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
+            const albumLink = document.createElement('a');
+            albumLink.href = albumDataUrl;
+            albumLink.download = 'past-forward-album.jpg';
+            document.body.appendChild(albumLink);
+            albumLink.click();
+            document.body.removeChild(albumLink);
+    
+            // 2. Download individual images sequentially
+            for (const [era] of successfulImages) {
+                // Use a small delay to prevent browser from blocking multiple downloads
+                await new Promise(resolve => setTimeout(resolve, 300));
+                handleDownloadIndividualImage(era);
+            }
+    
         } catch (error) {
             console.error("Failed to create or download album:", error);
             alert("Sorry, there was an error creating your album. Please try again.");
@@ -399,7 +417,7 @@ function App() {
                                             disabled={isDownloading} 
                                             className={`${primaryButtonClasses} disabled:opacity-50 disabled:cursor-not-allowed`}
                                         >
-                                            {isDownloading ? 'Creating Album...' : 'Download Album'}
+                                            {isDownloading ? 'Downloading All...' : 'Download Album'}
                                         </button>
                                         <button onClick={handleReset} className={secondaryButtonClasses}>
                                             Start Over

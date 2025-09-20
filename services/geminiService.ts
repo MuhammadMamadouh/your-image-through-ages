@@ -31,7 +31,11 @@ function getFallbackPrompt(era: string): string {
  * @returns The era string or null if not found.
  */
 function extractEra(prompt: string): string | null {
-    const eras = ['Ancient Egypt', 'Roman Empire', 'Viking Age', 'Medieval Period', 'Renaissance', 'Victorian Era', 'The Roaring 20s', 'Swinging 60s', 'Psychedelic 70s', 'Neon 80s', 'The Future', 'Stone Age'];
+    const eras = [ 'Roman Empire', 'Viking Age',
+    'Medieval Period', 'Renaissance', 'Victorian Era', 'The Roaring 20s', 'Swinging 60s', 
+    'Psychedelic 70s', 'Neon 80s', 'The Future', 'Stone Age',
+    '1800s', '1900s', '1920s', '1950s', '1970s', '1980s', '1990s', '2000s'
+    ];
     const regex = new RegExp(`(${eras.join('|')})`);
     const match = prompt.match(regex);
     return match ? match[1] : null;

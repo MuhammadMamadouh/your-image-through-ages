@@ -59,7 +59,11 @@ export async function createAlbumPage(imageData: Record<string, string>): Promis
     }));
 
     // 4. Define grid layout and draw each polaroid
-    const grid = { cols: 2, rows: 3, padding: 100 };
+    const imageCount = imagesWithRegions.length;
+    const cols = 4;
+    const rows = Math.ceil(imageCount / cols);
+    const grid = { cols, rows, padding: 100 };
+
     const contentTopMargin = 300; // Space for the header
     const contentHeight = canvasHeight - contentTopMargin;
     const cellWidth = (canvasWidth - grid.padding * (grid.cols + 1)) / grid.cols;
@@ -81,12 +85,7 @@ export async function createAlbumPage(imageData: Record<string, string>): Promis
     const imageContainerWidth = polaroidWidth * 0.9;
     const imageContainerHeight = imageContainerWidth; // Classic square-ish photo area
 
-    // Reverse the drawing order: draw bottom rows first so top rows are rendered on top
-    const reversedImages = [...imagesWithRegions].reverse();
-    reversedImages.forEach(({ region, img }, reversedIndex) => {
-        // Calculate the original index to determine grid position
-        const index = imagesWithRegions.length - 1 - reversedIndex;
-
+    imagesWithRegions.forEach(({ region, img }, index) => {
         const row = Math.floor(index / grid.cols);
         const col = index % grid.cols;
 
@@ -137,7 +136,8 @@ export async function createAlbumPage(imageData: Record<string, string>): Promis
         
         // Draw the handwritten caption
         ctx.fillStyle = '#222';
-        ctx.font = `60px 'Permanent Marker', cursive`;
+        const fontSize = Math.max(20, Math.round(polaroidWidth / 15));
+        ctx.font = `${fontSize}px 'Permanent Marker', cursive`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
